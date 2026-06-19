@@ -17,7 +17,8 @@ coverage/
 .env.local
 .env.*.local
 
-# Prisma (generated client lives in node_modules; keep migrations tracked)
+# Prisma (generated client output; keep migrations tracked)
+src/generated/
 prisma/*.db
 prisma/*.db-journal
 
