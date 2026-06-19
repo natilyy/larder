@@ -18,6 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:up": "docker compose up -d postgres"
