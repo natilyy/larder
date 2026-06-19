@@ -1,0 +1,53 @@
+# Larder — local dev & homelab deploy.
+#
+# Quick start (DB only, while you run the API with `npm run start:dev`):
+#   docker compose up -d postgres
+#
+# Full stack (once you've written the Dockerfile in Phase 0):
+#   docker compose up -d
+#
+# Data persists in the named volume `larder_pgdata` across restarts.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: larder-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-larder}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-larder}
+      POSTGRES_DB: ${POSTGRES_DB:-larder}
+    ports:
+      - "5432:5432"
+    volumes:
+      - larder_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-larder}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API service. Requires a Dockerfile (you'll create it in Phase 0).
+  # Until then, run the API locally with `npm run start:dev` against the postgres service above.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/CHANGE-ME/larder-api:latest
+    container_name: larder-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Inside the compose network the DB host is the service name "postgres".
+      DATABASE_URL: postgresql://${POSTGRES_USER:-larder}:${POSTGRES_PASSWORD:-larder}@postgres:5432/${POSTGRES_DB:-larder}?schema=public
+      PORT: ${PORT:-3000}
+      NODE_ENV: ${NODE_ENV:-production}
+      OFF_BASE_URL: ${OFF_BASE_URL:-https://world.openfoodfacts.org}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "${PORT:-3000}:3000"
+
+volumes:
+  larder_pgdata:
