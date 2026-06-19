@@ -8,3 +8,91 @@ datasource db {
     provider = "postgresql"
 }
 
+model Product {
+    id String @id @default(cuid())
+    barcode String? @unique
+    name String
+    brand String?
+    category String?
+    defaultUnit Unit
+    kcalPer100 Float?
+    proteinPer100 Float?
+    carbsper100 Float?
+    fatPer100 Float?
+    typicalPrice Int? //stored in pennies
+    createdAt DateTime @default(now())
+
+    //relations
+    inventory InventoryItem[] 
+    parLevel ParLevel?
+}
+
+enum Unit {
+    g
+    ml
+    unit
+}
+
+model InventoryItem {
+    id String @id @default(cuid())
+    product Product @relation(fields: [productId], references: [id])
+    productId String
+    location Location @relation(fields: [locationId], references: [id])
+    locationId String
+    quantity Float
+    unit Unit
+    expireDate DateTime?
+    openedAt DateTime?
+    isLeftover Boolean @default(false)
+    pricePaid Int?
+    createdAt DateTime @default(now())
+}
+
+//e.g pantry, fridge
+model Location {
+    id String @id @default(cuid())
+    name String
+    //relations
+    items InventoryItem[]
+}
+
+enum UsageReason {
+    used
+    binned
+}
+
+enum Source {
+    voice
+    manual
+    scan
+}
+
+model UsageLog {
+    id String @id @default(cuid())
+    productId String // no product relation because if product is deleted it will error
+    productName String //if product is deleted, still stores snapshot of name at time of usage
+    quantity Float
+    unit String
+    reason UsageReason @default(used)
+    source Source @default(manual)
+    createdAt DateTime @default(now())
+}
+
+//tells us when to notify that a product needs replenshing stock
+model ParLevel {
+    id String @id @default(cuid())
+    product Product @relation(fields: [productId], references: [id])
+    productId String @unique
+
+}
+
+model ShoppingListItem {
+    id String @id@default(cuid())
+    productId String? // can have freetext items so can be null
+    name String
+    quantity Float?
+    unit String?
+    purchased Boolean @default(false)
+    autoAdded Boolean @default(false) //true if added by engine
+    createdAt DateTime @default(now())
+}
