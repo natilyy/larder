@@ -17,7 +17,7 @@ model Product {
     defaultUnit Unit
     kcalPer100 Float?
     proteinPer100 Float?
-    carbsper100 Float?
+    carbsPer100 Float?
     fatPer100 Float?
     typicalPrice Int? //stored in pennies
     createdAt DateTime @default(now())
@@ -51,7 +51,7 @@ model InventoryItem {
 //e.g pantry, fridge
 model Location {
     id String @id @default(cuid())
-    name String
+    name String @unique
     //relations
     items InventoryItem[]
 }
@@ -72,7 +72,7 @@ model UsageLog {
     productId String // no product relation because if product is deleted it will error
     productName String //if product is deleted, still stores snapshot of name at time of usage
     quantity Float
-    unit String
+    unit Unit
     reason UsageReason @default(used)
     source Source @default(manual)
     createdAt DateTime @default(now())
@@ -83,11 +83,12 @@ model ParLevel {
     id String @id @default(cuid())
     product Product @relation(fields: [productId], references: [id])
     productId String @unique
-
+    minQuantity Float
+    unit Unit
 }
 
 model ShoppingListItem {
-    id String @id@default(cuid())
+    id String @id @default(cuid())
     productId String? // can have freetext items so can be null
     name String
     quantity Float?
